@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y curl
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 RUN apt-get install -y nodejs
 
+# Install protoc
+RUN apt-get install -y protobuf-compiler
+
 # Verify that Node.js was installed
 RUN node --version
 RUN npm --version

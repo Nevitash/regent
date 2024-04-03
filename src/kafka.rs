@@ -5,27 +5,31 @@ use rdkafka::{
     error::{KafkaError},
     ClientConfig,
 };
+use anyhow::Result;
+use log::{info, error};
 
 pub async fn create_topic(
     broker_string: &str,
     group_id: &str,
     client_id: &str,
     topic: &str,
-) -> Result<(), KafkaError> {
+) -> Result<()> {
+    let replication = broker_string.split(",").count();
     let client = create_admin_client(broker_string, group_id, client_id).await?;
-    let topic = NewTopic::new(topic, 10, TopicReplication::Fixed(2));
+    let topic = NewTopic::new(topic, 10, TopicReplication::Fixed(replication.try_into().unwrap()));
     let results = client
         .create_topics(vec![&topic], &AdminOptions::new())
         .await?;
-    let result: Result<(), KafkaError> = results
-        .into_iter()
-        .map(|result| match result {
-            Ok(_) => Ok(()),
-            Err((_, e)) => Err(KafkaError::AdminOpCreation(e.to_string())),
-        })
-        .collect::<Result<Vec<_>, _>>()
-        .map(|_| ());
-    result
+    for result in results {
+        match result {
+            Ok(_) => info!("Topic created successfully"),
+            Err((_, e)) => {
+                error!("Failed to create topic: {}", e);
+                return Err(anyhow::anyhow!(e.to_string()));
+            }
+        }
+    }
+    Ok(())
 }
 
 async fn create_admin_client(
@@ -37,6 +41,8 @@ async fn create_admin_client(
     config.set(KafkaConfigProperty::BOOTSTRAP_SERVERS, broker_string);
     config.set(KafkaConfigProperty::GROUP_ID, group_id);
     config.set(KafkaConfigProperty::CLIENT_ID, client_id);
+    config.set(KafkaConfigProperty::MESSAGE_TIMEOUT_MS, "60000");
+    config.set(KafkaConfigProperty::ACKS, "all");
     AdminClient::from_config(&config)
 }
 
@@ -49,4 +55,5 @@ impl KafkaConfigProperty {
     pub const AUTO_OFFSET_COMMIT: &str = "auto.offset.reset";
     pub const GROUP_ID: &str = "group.id";
     pub const MAX_POLL_RECORDS: &str = "max.poll.records";
+    pub const ACKS: &str = "acks";
 }
