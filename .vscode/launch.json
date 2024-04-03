@@ -1,0 +1,47 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'regent'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=regent",
+                    "--package=regent"
+                ],
+                "filter": {
+                    "name": "regent",
+                    "kind": "bin"
+                },
+                "preLaunchTask": "build"
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'regent'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=regent",
+                    "--package=regent"
+                ],
+                "filter": {
+                    "name": "regent",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "build"
+        }
+    ]
+}
