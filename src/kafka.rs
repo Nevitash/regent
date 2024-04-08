@@ -5,7 +5,6 @@ use rdkafka::{
     error::{KafkaError},
     ClientConfig,
 };
-use anyhow::Result;
 use log::{info, error};
 
 pub async fn create_topic(
@@ -13,7 +12,7 @@ pub async fn create_topic(
     group_id: &str,
     client_id: &str,
     topic: &str,
-) -> Result<()> {
+) -> Result<(), KafkaError> {
     let replication = broker_string.split(",").count();
     let client = create_admin_client(broker_string, group_id, client_id).await?;
     let topic = NewTopic::new(topic, 10, TopicReplication::Fixed(replication.try_into().unwrap()));
@@ -25,7 +24,7 @@ pub async fn create_topic(
             Ok(_) => info!("Topic created successfully"),
             Err((_, e)) => {
                 error!("Failed to create topic: {}", e);
-                return Err(anyhow::anyhow!(e.to_string()));
+                return Err(KafkaError::AdminOpCreation(format!("Failed to create topic: {}", error_message)));
             }
         }
     }

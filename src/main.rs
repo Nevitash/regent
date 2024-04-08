@@ -1,8 +1,10 @@
 use kafka::create_topic;
 use log::{info, LevelFilter};
 use log4rs::{append::console::ConsoleAppender, config::{Appender, Logger, Root}, Config};
+use grpc::server;
 
 mod kafka;
+mod grpc;
 
 #[tokio::main]
 async fn main(){
