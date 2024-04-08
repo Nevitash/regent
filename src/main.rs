@@ -9,7 +9,6 @@ mod grpc;
 #[tokio::main]
 async fn main(){
     init_logging().await;
-    create_topic("kafka:9092,kafka2:9092", "test_group", "test_client", "test_topic5").await.expect("Can't create topic");
 }
 
 

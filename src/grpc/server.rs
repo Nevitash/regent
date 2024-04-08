@@ -6,7 +6,9 @@ use tonic::{transport::Server, Request, Response, Status};
 
 use crate::kafka::create_topic;
 
-use self::kafka_service::{kafka_service_server::KafkaService, CreateTopicResponse, CreateTopicRequest};
+use self::kafka_service::{
+    kafka_service_server::KafkaService, CreateTopicRequest, CreateTopicResponse,
+};
 
 pub mod kafka_service {
     tonic::include_proto!("kafka");
@@ -22,46 +24,36 @@ impl KafkaService for KafkaServiceImpl {
     ) -> Result<Response<CreateTopicResponse>, Status> {
         debug!("Got a request: {:?}", request);
         let request_inner: CreateTopicRequest = request.into_inner();
-        let mut success: bool = false;
-        let mut error_message: String = String::new();
+
         match create_topic(
-            &request_inner.broker_string, 
-            &request_inner.group_id, 
-            &request_inner.client_id, 
-            &request_inner.topic
-        ).await{
-            Ok => {
-                success = true;
-            },
-            Err(error) => {
-                success = false;
-                error_message = error.to_string();
+            &request_inner.broker_string,
+            &request_inner.group_id,
+            &request_inner.client_id,
+            &request_inner.topic,
+        )
+        .await
+        {
+            Ok(_) => {
+                let response = kafka_service::CreateTopicResponse {
+                    success: true,
+                    error_message: String::new(),
+                };
+                Ok(Response::new(response))
             }
-        }
-        let response = kafka_service::CreateTopicResponse {
-            success,
-            error_message,
-        };
-
-        Ok(Response::new(response))
-    }
-}
-
-pub struct ApiError{
-    message: String,
-    error: Erro
-}
-
-impl From<KafkaError> for ApiError {
-    fn from(value: KafkaError) -> Self {
-        Self {
-            message: value.to_string(),
+            Err(error) => Err(error.to_status()),
         }
     }
 }
 
-impl From<ApiError> for Status {
-    fn from(value: ApiError) -> Self {
-        Status::al
+pub trait ToStatus {
+    fn to_status(&self) -> Status;
+}
+
+impl ToStatus for KafkaError {
+    fn to_status(&self) -> Status {
+        match &self {
+            KafkaError::AdminOpCreation(message) => Status::already_exists(message),
+            _ => Status::unknown("Internal Server Error"),
+        }
     }
 }
