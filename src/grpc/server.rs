@@ -2,7 +2,7 @@ use std::error;
 
 use log::debug;
 use rdkafka::error::KafkaError;
-use tonic::{transport::Server, Request, Response, Status};
+use tonic::{Request, Response, Status};
 
 use crate::kafka::create_topic;
 
@@ -14,6 +14,7 @@ pub mod kafka_service {
     tonic::include_proto!("kafka");
 }
 
+#[derive(Debug, Default)]
 pub struct KafkaServiceImpl {}
 
 #[tonic::async_trait]
