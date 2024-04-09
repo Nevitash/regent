@@ -18,11 +18,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn init_grpc_server_kafka() -> Result<(), Box<dyn std::error::Error>> {
     let url = "[::0]:50051".parse()?;
     let grpc_server = KafkaServiceImpl::default();
-
+    info!("Starting KafkaService on {}", url);
     Server::builder()
         .add_service(KafkaServiceServer::new(grpc_server))
         .serve(url)
         .await?;
+    info!("KafkaService started successfully");
 
     Ok(())
 }
